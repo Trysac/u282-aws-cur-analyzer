@@ -1,24 +1,32 @@
-"""
-Analyze AWS Cost and Usage Report CSV exports: amortized and unblended cost by service, account,
-region, tag or line item type, with exact Decimal sums
+"""Analyze AWS Cost and Usage Report CSV exports.
+
+This package reads CUR 1.0 and CUR 2.0 CSV files and applies the documented
+amortized cost formula using exact Decimal arithmetic.
 """
 
 from __future__ import annotations
 
-__all__ = ["__version__", "normalize"]
+import logging
+
+from .amortization import amortized_cost
+from .cur import read_cur
+from .errors import CurError, ErrorCode
+from .model import Coverage, LineItem
+from .summarize import render, summarize, tag_coverage
+
+__all__ = [
+    "Coverage",
+    "CurError",
+    "ErrorCode",
+    "LineItem",
+    "amortized_cost",
+    "read_cur",
+    "render",
+    "summarize",
+    "tag_coverage",
+]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 __version__ = "0.1.0"
-
-
-def normalize(value: str) -> str:
-    """Return ``value`` trimmed and lower-cased.
-
-    Placeholder API created by the template: replace it with the utility's real behavior.
-
-    Raises:
-        ValueError: if ``value`` is empty or only whitespace.
-    """
-    cleaned = value.strip()
-    if not cleaned:
-        raise ValueError("value must not be empty")
-    return cleaned.lower()

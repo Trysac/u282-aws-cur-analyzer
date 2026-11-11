@@ -1,29 +1,42 @@
 # Architecture
 
-## Purpose
+## Overview
 
-`trysac-aws-cur-analyzer` is a small, dependency-free Python library: Analyze AWS Cost and Usage Report CSV exports: amortized and unblended cost by service, account, region, tag or line item type, with exact Decimal sums
+The `aws_cur_analyzer` package reads AWS Cost and Usage Report (CUR) CSV files
+and provides amortized cost calculation and aggregation. It supports both CUR
+1.0 and CUR 2.0 column names through an explicit mapping, never relying on
+case-conversion rules.
 
-## Shape
+## Components
 
-```text
-caller code --> aws_cur_analyzer (public API in __init__.py)
-                    |
-                    +-- pure functions, no I/O, no global state
-```
+- **`columns.py`**: Central mapping between logical column names and their
+  CUR 1.0 / CUR 2.0 header strings.
+- **`cur.py`**: CSV reader that validates required columns, parses dates and
+  numbers, and yields `LineItem` objects. It temporarily adjusts
+  `csv.field_size_limit` to handle large fields.
+- **`model.py`**: Frozen dataclasses `LineItem` and `Coverage`.
+- **`amortization.py`**: Implements the amortized cost formula using a
+  data-driven rule table (`AMORTIZATION_RULES`), which can be overridden by
+  users.
+- **`summarize.py`**: Aggregation (`summarize`), tag coverage
+  (`tag_coverage`), and rendering (`render`) in text or JSON.
+- **`errors.py`**: Single `CurError` exception with machine-readable `code`.
+- **`__main__.py`**: Command-line interface.
 
-- **Public API**: the names listed in `__all__` of `src/aws_cur_analyzer/__init__.py`. Anything else is
-  internal and may change without a major version.
-- **Errors**: invalid input raises built-in exceptions (`ValueError`, `TypeError`) with a clear
-  message; the library never prints or exits.
-- **Side effects**: none. If a feature needs I/O, isolate it in its own module behind a small
-  interface and record the choice in an ADR.
+## Design Decisions
 
-## Quality contract
+- **Exact arithmetic**: All monetary values are `Decimal`; no floating point.
+- **Column mapping**: Explicit tables for CUR 1.0 and CUR 2.0 avoid brittle
+  string transformations.
+- **Validation limits**: `max_rows` (default 10 million), `max_field_chars`
+  (default 131072), and `max_groups` (default 100000) prevent resource
+  exhaustion.
+- **Overridable rules**: `AMORTIZATION_RULES` is a module-level dictionary that
+  can be reassigned for custom amortization logic.
+- **No runtime dependencies**: Uses only Python standard library.
 
-`scripts/check.py` is the single definition of the gates; `fabrica.json` tells the factory and CI
-how to run it. See [TESTING.md](TESTING.md).
+## Threat Model
 
-## Decisions
-
-Architecture decisions are recorded in [decisions/](decisions/) as numbered ADRs.
+Input is untrusted CSV data. The library enforces size limits and validates
+all numeric and date fields. It never executes code from input. See
+`docs/SECURITY.md` for details.

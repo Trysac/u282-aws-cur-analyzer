@@ -9,4 +9,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Added AWS CUR analyzer: read CUR 1.0/2.0 CSVs, compute amortized and unblended costs, aggregate by service, account, region, tag, and more, with exact Decimal arithmetic and CLI.
 - Initial project structure from the factory utility template.

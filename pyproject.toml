@@ -19,6 +19,9 @@ classifiers = [
 ]
 dependencies = []
 
+[project.scripts]
+aws-cur-analyzer = "aws_cur_analyzer.__main__:main"
+
 [project.urls]
 Homepage = "https://github.com/Trysac/u282-aws-cur-analyzer"
 Source = "https://github.com/Trysac/u282-aws-cur-analyzer"
